@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from routes.chat import router
+from backend.routes.chat import router
 
 app = FastAPI()
 

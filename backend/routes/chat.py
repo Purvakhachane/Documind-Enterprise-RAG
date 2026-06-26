@@ -1,11 +1,9 @@
 from fastapi import APIRouter
+from backend.models.request import ChatRequest
+from backend.services.rag_service import ask_question
 
 router = APIRouter()
 
 @router.post("/chat")
-def chat():
-    return {
-        "answer":"Sample Answer",
-        "source":"Policy.pdf",
-        "page":12
-    }
+def chat(request: ChatRequest):
+    return ask_question(request.question)
