@@ -1,125 +1,304 @@
 import streamlit as st
+import pandas as pd
+import json
+import time
 
 from document_processor.pdf_loader import save_pdf, load_pdf
 from document_processor.metadata_extractor import extract_metadata
 from document_processor.chunker import create_chunks
 
+# ---------------- PAGE CONFIG ---------------- #
 
 st.set_page_config(
     page_title="Documind Enterprise RAG",
     layout="wide"
 )
 
-st.title("📄 Documind Enterprise RAG")
+# ---------------- SIDEBAR ---------------- #
 
-uploaded_file = st.file_uploader(
-    "Upload PDF",
-    type=["pdf"]
+st.sidebar.title("📄 Documind Enterprise RAG")
+
+st.sidebar.info(
+    "Week 1 - Document Processing Pipeline"
 )
 
-if uploaded_file is not None:
+st.sidebar.markdown("---")
 
-    # Save uploaded PDF
-    file_path = save_pdf(uploaded_file)
+st.sidebar.write(
+    "Upload one or more PDF documents to begin processing."
+)
 
-    # Load PDF
-    documents = load_pdf(file_path)
+# ---------------- TITLE ---------------- #
 
-    # Extract Metadata
-    metadata = extract_metadata(documents)
-    
-    # Create Chunks
-    chunks = create_chunks(documents)
+st.title("📄 Documind Enterprise RAG")
 
-    st.success("PDF Loaded Successfully!")
+st.subheader(
+    "Enterprise Document Processing Pipeline"
+)
 
-    # Preview
-    st.subheader("Document Preview")
+# ---------------- FILE UPLOADER ---------------- #
 
-    st.write(documents[0].page_content[:1000])
+uploaded_files = st.file_uploader(
+    "Upload PDF Documents",
+    type=["pdf"],
+    accept_multiple_files=True
+)
 
-    # Metadata
-    st.subheader("Document Metadata")
+# ---------------- MAIN APP ---------------- #
 
-    for page in metadata:
+if uploaded_files:
 
-        st.markdown("---")
+    st.sidebar.success("PDF Uploaded")
 
-        st.write(f"📄 Source: {page['source']}")
-
-        st.write(f"📑 Page Number: {page['page']}")
-
-        st.write(f"🔤 Characters: {page['characters']}")
-
-        st.write(f"📝 Words: {page['words']}")
-    
-
-    st.subheader("Document Chunks")
-    st.success(f"Total Chunks Created: {len(chunks)}")
-
-    for chunk in chunks[:5]:
+    for uploaded_file in uploaded_files:
 
         st.markdown("---")
 
-        st.write(f"🆔 Chunk ID: {chunk.metadata['chunk_id']}")
+        st.header(f"📄 {uploaded_file.name}")
 
-        st.write(f"📄 Source: {chunk.metadata['source']}")
+        try:
 
-        st.write(f"📑 Page: {chunk.metadata['page'] + 1}")
+            # File Size Validation
 
-        st.write(f"🔢 Chunk Number: {chunk.metadata['chunk_number']}")
+            if uploaded_file.size > 10 * 1024 * 1024:
 
-        st.write(f"🔤 Characters: {chunk.metadata['characters']}")
+                st.error("Maximum file size is 10 MB.")
 
-        st.write(f"📝 Words: {chunk.metadata['words']}")
+                continue
 
-        st.text(chunk.page_content[:300])
-    
-    st.subheader("Search Chunk")
+            start_time = time.time()
 
-    search_chunk = st.text_input("Enter Chunk ID")
+            # Save PDF
 
-    if search_chunk:
+            file_path = save_pdf(uploaded_file)
 
-        found = False
+            # Load PDF
 
-        for chunk in chunks:
+            documents = load_pdf(file_path)
 
-            if chunk.metadata["chunk_id"] == search_chunk:
+            st.sidebar.success("PDF Parsed")
 
-                st.success("Chunk Found")
+            # Metadata
 
-                st.write(chunk.metadata)
+            metadata = extract_metadata(documents)
 
-                st.write(chunk.page_content)
+            st.sidebar.success("Metadata Extracted")
 
-                found = True
+            # Chunking
 
-                break
+            chunks = create_chunks(documents)
 
-        if not found:
+            st.sidebar.success("Chunks Created")
 
-            st.warning("Chunk ID not found.")
-        
-    st.subheader("Chunk Statistics")
+            processing_time = round(
+                time.time() - start_time,
+                2
+            )
 
-    col1, col2, col3 = st.columns(3)
+            st.success(
+                f"Processed Successfully in {processing_time} seconds"
+            )
 
-    col1.metric(
-        "Total Chunks",
-        len(chunks)
-    )
+            # ---------------- DOCUMENT SUMMARY ---------------- #
 
-    col2.metric(
-        "Average Words",
-        round(
-            sum(c.metadata["words"] for c in chunks) / len(chunks)
-        )
-    )
+            st.subheader("📊 Document Summary")
 
-    col3.metric(
-        "Average Characters",
-        round(
-            sum(c.metadata["characters"] for c in chunks) / len(chunks)
-        )
+            col1, col2, col3 = st.columns(3)
+
+            col1.metric(
+                "Pages",
+                len(documents)
+            )
+
+            col2.metric(
+                "Chunks",
+                len(chunks)
+            )
+
+            col3.metric(
+                "File Size",
+                f"{uploaded_file.size/1024:.2f} KB"
+            )
+
+            # ---------------- PREVIEW ---------------- #
+
+            st.subheader("📄 Document Preview")
+
+            st.write(
+                documents[0].page_content[:1000]
+            )
+
+            # ---------------- METADATA ---------------- #
+
+            st.subheader("📑 Metadata")
+
+            for page in metadata:
+
+                with st.expander(
+                    f"Page {page['page']}"
+                ):
+
+                    st.write(
+                        f"Source : {page['source']}"
+                    )
+
+                    st.write(
+                        f"Characters : {page['characters']}"
+                    )
+
+                    st.write(
+                        f"Words : {page['words']}"
+                    )
+
+            metadata_json = json.dumps(
+                metadata,
+                indent=4
+            )
+
+            st.download_button(
+                "⬇ Download Metadata JSON",
+                metadata_json,
+                "metadata.json",
+                "application/json"
+            )
+
+            # ---------------- CHUNKS ---------------- #
+
+            st.subheader("🧩 Document Chunks")
+
+            st.success(
+                f"Total Chunks : {len(chunks)}"
+            )
+
+            for chunk in chunks[:5]:
+
+                with st.expander(
+                    chunk.metadata["chunk_id"]
+                ):
+
+                    st.write(
+                        f"Source : {chunk.metadata['source']}"
+                    )
+
+                    st.write(
+                        f"Page : {chunk.metadata['page'] + 1}"
+                    )
+
+                    st.write(
+                        f"Chunk Number : {chunk.metadata['chunk_number']}"
+                    )
+
+                    st.write(
+                        f"Characters : {chunk.metadata['characters']}"
+                    )
+
+                    st.write(
+                        f"Words : {chunk.metadata['words']}"
+                    )
+
+                    st.write(
+                        chunk.page_content
+                    )
+
+            # ---------------- SEARCH CHUNK ---------------- #
+
+            st.subheader("🔍 Search Chunk")
+
+            search_chunk = st.text_input(
+                "Enter Chunk ID",
+                key=f"search_{uploaded_file.name}"
+            )
+
+            if search_chunk:
+
+                found = False
+
+                for chunk in chunks:
+
+                    if chunk.metadata["chunk_id"] == search_chunk:
+
+                        st.success("Chunk Found")
+
+                        st.json(chunk.metadata)
+
+                        st.write(chunk.page_content)
+
+                        found = True
+
+                        break
+
+                if not found:
+
+                    st.warning("Chunk ID not found.")
+
+            # ---------------- CHUNK STATISTICS ---------------- #
+
+            st.subheader("📊 Chunk Statistics")
+
+            col1, col2, col3 = st.columns(3)
+
+            col1.metric(
+                "Total Chunks",
+                len(chunks)
+            )
+
+            col2.metric(
+                "Average Words",
+                round(
+                    sum(
+                        c.metadata["words"]
+                        for c in chunks
+                    ) / len(chunks)
+                )
+            )
+
+            col3.metric(
+                "Average Characters",
+                round(
+                    sum(
+                        c.metadata["characters"]
+                        for c in chunks
+                    ) / len(chunks)
+                )
+            )
+
+            # ---------------- DOWNLOAD CHUNK CSV ---------------- #
+
+            chunk_df = pd.DataFrame(
+                [chunk.metadata for chunk in chunks]
+            )
+
+            st.download_button(
+                "⬇ Download Chunk Metadata CSV",
+                chunk_df.to_csv(index=False),
+                "chunk_metadata.csv",
+                "text/csv"
+            )
+
+            # ---------------- PIPELINE SUMMARY ---------------- #
+
+            st.subheader("✅ Pipeline Status")
+
+            st.success("✔ PDF Uploaded")
+
+            st.success("✔ PDF Parsed")
+
+            st.success("✔ Metadata Extracted")
+
+            st.success("✔ Chunking Completed")
+
+            st.success("✔ Ready for Embedding Generation")
+
+        except Exception as e:
+
+            st.error(
+                f"Error processing {uploaded_file.name}"
+            )
+
+            st.exception(e)
+
+else:
+
+    st.info(
+        "👆 Upload one or more PDF files to begin processing."
     )
