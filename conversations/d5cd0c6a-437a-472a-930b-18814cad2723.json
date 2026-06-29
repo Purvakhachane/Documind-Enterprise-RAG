@@ -1,0 +1,11 @@
+{
+  "conversation_id": "d5cd0c6a-437a-472a-930b-18814cad2723",
+  "created_at": "2026-06-29T15:21:23.326452",
+  "history": [
+    {
+      "question": "What is this system about?",
+      "answer": "This is a dummy response.",
+      "timestamp": "2026-06-29T15:21:23.328476"
+    }
+  ]
+}
