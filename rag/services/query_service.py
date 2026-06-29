@@ -1,5 +1,6 @@
 from rag.guardrails.hallucination_guard import HallucinationGuard
 from rag.utils.citation_formatter import CitationFormatter
+from rag.utils.response_formatter import ResponseFormatter
 
 
 class QueryService:
@@ -24,7 +25,7 @@ class QueryService:
             response["context"]
         )
 
-        return {
-            "answer": answer,
-            "citations": citations,
-        }
+        return ResponseFormatter.format(
+            answer,
+            citations,
+        )
