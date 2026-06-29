@@ -47,3 +47,16 @@ def delete_conversation(conversation_id: str):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/{conversation_id}/summary")
+def get_conversation_summary(conversation_id: str):
+    """Return a concise summary for a conversation."""
+    try:
+        summary = conversation_service.get_conversation_summary(conversation_id)
+        if not summary:
+            raise HTTPException(status_code=404, detail="Conversation not found")
+        return summary
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

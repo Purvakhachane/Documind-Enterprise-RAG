@@ -2,6 +2,7 @@ import unittest
 from fastapi.testclient import TestClient
 
 from backend.main import app
+from backend.routes.conversations import conversation_service
 
 
 class DocuMindApiTests(unittest.TestCase):
@@ -25,6 +26,16 @@ class DocuMindApiTests(unittest.TestCase):
         self.assertIn("source", data)
         self.assertIn("confidence", data)
         self.assertIn("conversation_id", data)
+
+    def test_conversation_summary_endpoint_returns_summary(self):
+        conversation_id = conversation_service.create_conversation()
+        conversation_service.add_message(conversation_id, "What is this project?", "It is an enterprise RAG app.")
+        response = self.client.get(f"/api/conversations/{conversation_id}/summary")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIn("conversation_id", data)
+        self.assertIn("summary", data)
+        self.assertIn("message_count", data)
 
 
 if __name__ == "__main__":

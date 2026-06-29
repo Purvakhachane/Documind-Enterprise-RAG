@@ -73,3 +73,29 @@ class ConversationService:
         
         os.remove(conv_file)
         return True
+
+    def get_conversation_summary(self, conversation_id: str) -> Optional[dict]:
+        """Generate a lightweight summary for a conversation."""
+        conversation = self.get_conversation(conversation_id)
+        if not conversation:
+            return None
+
+        history = conversation.get("history", [])
+        if not history:
+            return {
+                "conversation_id": conversation_id,
+                "summary": "No messages yet.",
+                "message_count": 0,
+            }
+
+        questions = [item.get("question", "") for item in history if item.get("question")]
+        answers = [item.get("answer", "") for item in history if item.get("answer")]
+        summary_text = " ".join(answers[-2:]) if len(answers) >= 2 else " ".join(answers)
+        summary = summary_text.strip() or "Conversation captured successfully."
+
+        return {
+            "conversation_id": conversation_id,
+            "summary": summary[:220] + ("..." if len(summary) > 220 else ""),
+            "message_count": len(history),
+            "last_question": questions[-1] if questions else None,
+        }
