@@ -1,5 +1,6 @@
 from rag.retrieval.parent_retriever import ParentRetriever
 from rag.vectorstores.faiss_store import FAISSStore
+from rag.retrieval.hybrid_retriever import HybridRetriever
 
 
 class IndexingService:
@@ -9,10 +10,14 @@ class IndexingService:
         self.vector_store = FAISSStore().create()
 
     def build_index(self, documents):
-        retriever = ParentRetriever(
+        parent_retriever = ParentRetriever(
             self.vector_store
         ).build()
 
-        retriever.add_documents(documents)
+        parent_retriever.add_documents(documents)
 
-        return retriever
+        hybrid_retriever = HybridRetriever(
+            self.vector_store
+        ).build(documents)
+
+        return hybrid_retriever
