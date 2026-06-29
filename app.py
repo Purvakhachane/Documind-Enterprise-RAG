@@ -53,16 +53,73 @@ if uploaded_file is not None:
 
         st.write(f"📝 Words: {page['words']}")
     
+
     st.subheader("Document Chunks")
+    st.success(f"Total Chunks Created: {len(chunks)}")
 
-    st.write(f"Total Chunks Created: {len(chunks)}")
-
-    for i, chunk in enumerate(chunks[:5], start=1):
+    for chunk in chunks[:5]:
 
         st.markdown("---")
 
-        st.write(f"Chunk {i}")
+        st.write(f"🆔 Chunk ID: {chunk.metadata['chunk_id']}")
 
-        st.write(chunk.page_content[:300])
+        st.write(f"📄 Source: {chunk.metadata['source']}")
 
-        st.write(chunk.metadata)
+        st.write(f"📑 Page: {chunk.metadata['page'] + 1}")
+
+        st.write(f"🔢 Chunk Number: {chunk.metadata['chunk_number']}")
+
+        st.write(f"🔤 Characters: {chunk.metadata['characters']}")
+
+        st.write(f"📝 Words: {chunk.metadata['words']}")
+
+        st.text(chunk.page_content[:300])
+    
+    st.subheader("Search Chunk")
+
+    search_chunk = st.text_input("Enter Chunk ID")
+
+    if search_chunk:
+
+        found = False
+
+        for chunk in chunks:
+
+            if chunk.metadata["chunk_id"] == search_chunk:
+
+                st.success("Chunk Found")
+
+                st.write(chunk.metadata)
+
+                st.write(chunk.page_content)
+
+                found = True
+
+                break
+
+        if not found:
+
+            st.warning("Chunk ID not found.")
+        
+    st.subheader("Chunk Statistics")
+
+    col1, col2, col3 = st.columns(3)
+
+    col1.metric(
+        "Total Chunks",
+        len(chunks)
+    )
+
+    col2.metric(
+        "Average Words",
+        round(
+            sum(c.metadata["words"] for c in chunks) / len(chunks)
+        )
+    )
+
+    col3.metric(
+        "Average Characters",
+        round(
+            sum(c.metadata["characters"] for c in chunks) / len(chunks)
+        )
+    )

@@ -10,4 +10,25 @@ def create_chunks(documents):
 
     chunks = splitter.split_documents(documents)
 
-    return chunks
+    enhanced_chunks = []
+
+    for index, chunk in enumerate(chunks):
+
+        source = chunk.metadata.get("source", "Unknown")
+        page = chunk.metadata.get("page", 0) + 1
+
+        chunk.metadata.update({
+
+            "chunk_number": index + 1,
+
+            "chunk_id": f"{source}_page_{page}_chunk_{index+1}",
+
+            "characters": len(chunk.page_content),
+
+            "words": len(chunk.page_content.split())
+
+        })
+
+        enhanced_chunks.append(chunk)
+
+    return enhanced_chunks
