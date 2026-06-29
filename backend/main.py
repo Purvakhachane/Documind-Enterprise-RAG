@@ -1,5 +1,7 @@
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
 from backend.routes.chat import router as chat_router
 from backend.routes.documents import router as documents_router
 from backend.routes.conversations import router as conversations_router
@@ -11,8 +13,16 @@ app = FastAPI(
     version="1.0.0"
 )
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # Include routers
-app.include_router(chat_router, prefix="/api")
+app.include_router(chat_router)
 app.include_router(documents_router)
 app.include_router(conversations_router)
 
@@ -20,18 +30,46 @@ app.include_router(conversations_router)
 app.add_exception_handler(Exception, global_exception_handler)
 app.add_exception_handler(RequestValidationError, validation_exception_handler)
 
-@app.get("/")
+@app.get("/", response_class=HTMLResponse)
 def home():
-    return {
-        "message": "DocuMind Enterprise RAG Running",
-        "version": "1.0.0",
-        "endpoints": {
-            "chat": "/api/chat",
-            "documents": "/api/documents",
-            "conversations": "/api/conversations"
-        }
-    }
+    return """
+    <!DOCTYPE html>
+    <html lang=\"en\">
+    <head>
+        <meta charset=\"utf-8\" />
+        <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />
+        <title>DocuMind Enterprise RAG</title>
+        <style>
+            body { font-family: Arial, sans-serif; margin: 0; background: #0f172a; color: #f8fafc; }
+            .container { max-width: 860px; margin: 0 auto; padding: 3rem 1.5rem; }
+            .card { background: #111827; padding: 2rem; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.25); }
+            h1 { margin-top: 0; }
+            code { background: #1f2937; padding: 0.15rem 0.4rem; border-radius: 6px; }
+            a { color: #93c5fd; }
+        </style>
+    </head>
+    <body>
+        <div class=\"container\">
+            <div class=\"card\">
+                <h1>DocuMind Enterprise RAG</h1>
+                <p>Your enterprise-ready document chat assistant is live and ready for exploration.</p>
+                <ul>
+                    <li><strong>Chat:</strong> <code>/api/chat</code></li>
+                    <li><strong>Documents:</strong> <code>/api/documents/upload</code> and <code>/api/documents/list</code></li>
+                    <li><strong>Conversations:</strong> <code>/api/conversations/create</code></li>
+                </ul>
+                <p>Open <a href=\"/docs\">/docs</a> for the interactive API documentation.</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
 
 @app.get("/health")
 def health():
-    return {"status": "healthy", "service": "DocuMind Enterprise RAG"}
+    return {
+        "status": "healthy",
+        "service": "DocuMind Enterprise RAG",
+        "docs": "/docs",
+        "version": "1.0.0"
+    }

@@ -10,31 +10,25 @@ conversation_service = ConversationService()
 
 @router.post("/chat")
 def chat(request: ChatRequest):
-    """Process a chat request with RAG"""
+    """Process a chat request with RAG and persist it in a conversation."""
     try:
-        # Get RAG response
         rag_response = ask_question(request.question)
-        
-        # Create conversation if not provided
-        conversation_id = request.conversation_id
-        if not conversation_id:
-            conversation_id = conversation_service.create_conversation()
-        
-        # Add to conversation history
+
+        conversation_id = request.conversation_id or conversation_service.create_conversation()
+
         conversation_service.add_message(
             conversation_id,
             request.question,
-            rag_response["answer"]
+            rag_response["answer"],
         )
-        
-        # Return structured response
+
         return ChatResponse(
             answer=rag_response["answer"],
             source=rag_response["source"],
             page=rag_response["page"],
             confidence=0.85,
             conversation_id=conversation_id,
-            timestamp=datetime.now()
+            timestamp=datetime.now(),
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
