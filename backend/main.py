@@ -6,12 +6,17 @@ from backend.routes.chat import router as chat_router
 from backend.routes.documents import router as documents_router
 from backend.routes.conversations import router as conversations_router
 from backend.middleware.error_handler import global_exception_handler, validation_exception_handler
+from backend.services.document_service import DocumentService
+from backend.services.conversation_service import ConversationService
 
 app = FastAPI(
     title="DocuMind Enterprise RAG",
     description="Enterprise Retrieval-Augmented Generation System",
     version="1.0.0"
 )
+
+document_service = DocumentService()
+conversation_service = ConversationService()
 
 app.add_middleware(
     CORSMiddleware,
@@ -72,4 +77,16 @@ def health():
         "service": "DocuMind Enterprise RAG",
         "docs": "/docs",
         "version": "1.0.0"
+    }
+
+@app.get("/api/status")
+def status_summary():
+    documents = document_service.list_documents()
+    conversations = conversation_service.list_conversations()
+    return {
+        "service": "DocuMind Enterprise RAG",
+        "version": "1.0.0",
+        "document_count": len(documents),
+        "conversation_count": len(conversations),
+        "status": "ready"
     }
