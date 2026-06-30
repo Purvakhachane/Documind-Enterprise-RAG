@@ -93,8 +93,8 @@ async def not_found_handler(request: Request, exc):
     return JSONResponse(
         status_code=404,
         content={
-            "error": "Not Found",
-            "detail": f"The route {request.url.path} was not found.",
+            "success": False,
+            "message": f"The route {request.url.path} was not found.",
             "status_code": 404,
         },
     )

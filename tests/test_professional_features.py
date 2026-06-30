@@ -19,7 +19,8 @@ class ProfessionalApiTests(unittest.TestCase):
         response = self.client.get("/does-not-exist")
         self.assertEqual(response.status_code, 404)
         data = response.json()
-        self.assertIn("error", data)
+        self.assertFalse(data["success"])
+        self.assertIn("message", data)
         self.assertEqual(data["status_code"], 404)
 
 
