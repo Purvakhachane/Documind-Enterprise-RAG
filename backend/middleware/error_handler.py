@@ -11,6 +11,18 @@ if not logger.handlers:
     logger.addHandler(handler)
 
 
+def _serialize_validation_errors(errors: list) -> list:
+    serialized = []
+    for err in errors:
+        serialized.append({
+            "loc": list(err.get("loc", [])),
+            "msg": err.get("msg"),
+            "type": err.get("type"),
+            "input": err.get("input"),
+        })
+    return serialized
+
+
 async def global_exception_handler(request: Request, exc: Exception):
     """Return a consistent JSON response for unexpected server errors."""
     logger.exception("Unhandled exception for %s", request.url.path)
@@ -32,7 +44,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         content={
             "success": False,
             "message": "Validation failed",
-            "detail": exc.errors(),
+            "detail": _serialize_validation_errors(exc.errors()),
             "status_code": 422,
         },
     )
