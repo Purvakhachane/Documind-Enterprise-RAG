@@ -1,18 +1,21 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from backend.routes.chat import router as chat_router
 from backend.routes.documents import router as documents_router
 from backend.routes.conversations import router as conversations_router
 from backend.middleware.error_handler import global_exception_handler, validation_exception_handler
 from backend.services.document_service import DocumentService
 from backend.services.conversation_service import ConversationService
+from backend.config import APP_TITLE, APP_DESCRIPTION, APP_VERSION, ENVIRONMENT
 
 app = FastAPI(
-    title="DocuMind Enterprise RAG",
-    description="Enterprise Retrieval-Augmented Generation System",
-    version="1.0.0"
+    title=APP_TITLE,
+    description=APP_DESCRIPTION,
+    version=APP_VERSION,
+    docs_url="/docs",
+    redoc_url="/redoc"
 )
 
 document_service = DocumentService()
@@ -45,25 +48,30 @@ def home():
         <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />
         <title>DocuMind Enterprise RAG</title>
         <style>
-            body { font-family: Arial, sans-serif; margin: 0; background: #0f172a; color: #f8fafc; }
-            .container { max-width: 860px; margin: 0 auto; padding: 3rem 1.5rem; }
-            .card { background: #111827; padding: 2rem; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.25); }
-            h1 { margin-top: 0; }
-            code { background: #1f2937; padding: 0.15rem 0.4rem; border-radius: 6px; }
+            :root { color-scheme: dark; }
+            body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; background: linear-gradient(135deg, #020617, #0f172a); color: #f8fafc; }
+            .container { max-width: 960px; margin: 0 auto; padding: 3rem 1.5rem; }
+            .card { background: rgba(15, 23, 42, 0.95); padding: 2rem; border-radius: 18px; box-shadow: 0 18px 45px rgba(0,0,0,0.35); border: 1px solid rgba(148, 163, 184, 0.18); }
+            h1 { margin-top: 0; font-size: 2rem; }
+            .badge { display: inline-block; padding: 0.3rem 0.7rem; border-radius: 999px; background: #1d4ed8; font-size: 0.85rem; margin-bottom: 1rem; }
+            code { background: #1f2937; padding: 0.15rem 0.45rem; border-radius: 6px; }
             a { color: #93c5fd; }
+            ul { line-height: 1.7; }
         </style>
     </head>
     <body>
         <div class=\"container\">
             <div class=\"card\">
+                <div class=\"badge\">Professional • Enterprise Ready</div>
                 <h1>DocuMind Enterprise RAG</h1>
-                <p>Your enterprise-ready document chat assistant is live and ready for exploration.</p>
+                <p>Your enterprise-grade document intelligence assistant is live and ready for secure, intelligent exploration.</p>
                 <ul>
                     <li><strong>Chat:</strong> <code>/api/chat</code></li>
                     <li><strong>Documents:</strong> <code>/api/documents/upload</code> and <code>/api/documents/list</code></li>
                     <li><strong>Conversations:</strong> <code>/api/conversations/create</code></li>
+                    <li><strong>Status:</strong> <code>/api/status</code></li>
                 </ul>
-                <p>Open <a href=\"/docs\">/docs</a> for the interactive API documentation.</p>
+                <p>Open <a href=\"/docs\">/docs</a> for the interactive API documentation or <a href=\"/redoc\">/redoc</a> for a structured reference.</p>
             </div>
         </div>
     </body>
@@ -76,16 +84,28 @@ def health():
         "status": "healthy",
         "service": "DocuMind Enterprise RAG",
         "docs": "/docs",
-        "version": "1.0.0"
+        "version": APP_VERSION,
+        "environment": ENVIRONMENT
     }
+
+@app.exception_handler(404)
+async def not_found_handler(request: Request, exc):
+    return JSONResponse(
+        status_code=404,
+        content={
+            "error": "Not Found",
+            "detail": f"The route {request.url.path} was not found.",
+            "status_code": 404,
+        },
+    )
 
 @app.get("/api/status")
 def status_summary():
     documents = document_service.list_documents()
     conversations = conversation_service.list_conversations()
     return {
-        "service": "DocuMind Enterprise RAG",
-        "version": "1.0.0",
+        "service": APP_TITLE,
+        "version": APP_VERSION,
         "document_count": len(documents),
         "conversation_count": len(conversations),
         "status": "ready"

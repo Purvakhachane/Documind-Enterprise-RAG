@@ -1,0 +1,4 @@
+APP_TITLE = "DocuMind Enterprise RAG"
+APP_DESCRIPTION = "Professional enterprise retrieval-augmented generation platform"
+APP_VERSION = "1.0.0"
+ENVIRONMENT = "development"
