@@ -6,10 +6,14 @@ Document processing pipeline.
 This module orchestrates the complete document ingestion workflow.
 """
 
+from unittest import result
+
 from document_processor.pdf_loader import save_pdf, load_pdf
 from document_processor.metadata_extractor import extract_metadata
 from document_processor.chunker import create_chunks
+from ui import chunks, metadata, summary
 from vector_db.pinecone_manager import PineconeManager
+from services.document_registry import save_document_info
 
 
 class DocumentPipeline:
@@ -49,9 +53,10 @@ class DocumentPipeline:
             "pages": len(documents),
             "chunks": len(chunks),
             "file_size": uploaded_file.size
+        
         }
 
-        return {
+        result = {
             "file_path": file_path,
             "documents": documents,
             "metadata": metadata,
@@ -60,3 +65,10 @@ class DocumentPipeline:
             "pinecone": self.pinecone,
             "index_status": index_status
         }
+
+        save_document_info(
+            result,
+            uploaded_file.name
+        )
+
+        return result

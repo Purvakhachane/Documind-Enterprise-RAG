@@ -2,11 +2,14 @@ import time
 
 import streamlit as st
 
+from ui.registry import show_registry
+
 from ingestion.pipeline import DocumentPipeline
 
 from ui.sidebar import (
     setup_sidebar,
     show_processing_status
+    
 )
 
 from ui.summary import show_summary
@@ -22,7 +25,7 @@ from ui.downloads import (
 )
 
 # ---------------- PAGE CONFIG ---------------- #
-
+show_registry()
 st.set_page_config(
     page_title="Documind Enterprise RAG",
     layout="wide"
