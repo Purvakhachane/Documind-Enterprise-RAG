@@ -1,27 +1,54 @@
+"""
+chunker.py
+
+Splits documents into smaller chunks and enriches each chunk
+with metadata for vector storage and citation.
+"""
+
+import os
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 
-def create_chunks(documents):
+# Chunking configuration
+CHUNK_SIZE = 500
+CHUNK_OVERLAP = 100
+
+
+def create_chunks(documents: list) -> list:
+    """
+    Split documents into smaller chunks and attach metadata.
+
+    Args:
+        documents (list): List of LangChain Document objects.
+
+    Returns:
+        list: List of chunked LangChain Document objects.
+    """
 
     splitter = RecursiveCharacterTextSplitter(
-        chunk_size=500,
-        chunk_overlap=100
+        chunk_size=CHUNK_SIZE,
+        chunk_overlap=CHUNK_OVERLAP
     )
 
     chunks = splitter.split_documents(documents)
 
-    enhanced_chunks = []
+    for index, chunk in enumerate(chunks, start=1):
 
-    for index, chunk in enumerate(chunks):
+        source = os.path.basename(
+            chunk.metadata.get("source", "Unknown")
+        )
 
-        source = chunk.metadata.get("source", "Unknown")
         page = chunk.metadata.get("page", 0) + 1
 
         chunk.metadata.update({
 
-            "chunk_number": index + 1,
+            "source": source,
 
-            "chunk_id": f"{source}_page_{page}_chunk_{index+1}",
+            "page": page,
+
+            "chunk_number": index,
+
+            "chunk_id": f"{source}_page_{page}_chunk_{index}",
 
             "characters": len(chunk.page_content),
 
@@ -29,6 +56,4 @@ def create_chunks(documents):
 
         })
 
-        enhanced_chunks.append(chunk)
-
-    return enhanced_chunks
+    return chunks
