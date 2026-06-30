@@ -7,8 +7,13 @@ Displays document summary.
 import streamlit as st
 
 
-def show_summary(documents, chunks, uploaded_file):
-    """Display document summary."""
+def show_summary(result):
+    """
+    Display document summary and preview.
+    """
+
+    summary = result["summary"]
+    documents = result["documents"]
 
     st.subheader("📊 Document Summary")
 
@@ -16,17 +21,17 @@ def show_summary(documents, chunks, uploaded_file):
 
     col1.metric(
         "Pages",
-        len(documents)
+        summary["pages"]
     )
 
     col2.metric(
         "Chunks",
-        len(chunks)
+        summary["chunks"]
     )
 
     col3.metric(
         "File Size",
-        f"{uploaded_file.size / 1024:.2f} KB"
+        f"{summary['file_size'] / 1024:.2f} KB"
     )
 
     st.subheader("📄 Document Preview")

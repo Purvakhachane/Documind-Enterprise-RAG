@@ -1,22 +1,9 @@
 """
 pipeline.py
 
-This module manages the complete document processing pipeline.
+Document processing pipeline.
 
-Workflow:
-Upload PDF
-    ↓
-Save PDF
-    ↓
-Load PDF
-    ↓
-Extract Metadata
-    ↓
-Create Chunks
-    ↓
-Create Pinecone Index
-    ↓
-Return Processing Result
+This module orchestrates the complete document ingestion workflow.
 """
 
 from document_processor.pdf_loader import save_pdf, load_pdf
@@ -25,39 +12,51 @@ from document_processor.chunker import create_chunks
 from vector_db.pinecone_manager import PineconeManager
 
 
-def process_document(uploaded_file):
-    """
-    Process a PDF from upload to chunk creation.
+class DocumentPipeline:
+    """Handles the complete document processing workflow."""
 
-    Args:
-        uploaded_file: Streamlit UploadedFile object.
+    def __init__(self):
+        self.pinecone = PineconeManager()
 
-    Returns:
-        dict: All processed document information.
-    """
+    def process(self, uploaded_file):
+        """
+        Process an uploaded PDF.
 
-    # Save uploaded PDF
-    file_path = save_pdf(uploaded_file)
+        Args:
+            uploaded_file: Streamlit UploadedFile
 
-    # Load PDF
-    documents = load_pdf(file_path)
+        Returns:
+            dict
+        """
 
-    # Extract page metadata
-    metadata = extract_metadata(documents)
+        # Save PDF
+        file_path = save_pdf(uploaded_file)
 
-    # Split document into chunks
-    chunks = create_chunks(documents)
+        # Load PDF
+        documents = load_pdf(file_path)
 
-    # Initialize Pinecone
-    pinecone = PineconeManager()
+        # Extract metadata
+        metadata = extract_metadata(documents)
 
-    # Create index if needed
-    index_status = pinecone.create_index()
+        # Split into chunks
+        chunks = create_chunks(documents)
 
-    return {
-        "documents": documents,
-        "metadata": metadata,
-        "chunks": chunks,
-        "pinecone": pinecone,
-        "index_status": index_status
-    }
+        # Ensure Pinecone index exists
+        index_status = self.pinecone.create_index()
+
+        # Document summary
+        summary = {
+            "pages": len(documents),
+            "chunks": len(chunks),
+            "file_size": uploaded_file.size
+        }
+
+        return {
+            "file_path": file_path,
+            "documents": documents,
+            "metadata": metadata,
+            "chunks": chunks,
+            "summary": summary,
+            "pinecone": self.pinecone,
+            "index_status": index_status
+        }
