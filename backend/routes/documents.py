@@ -10,12 +10,17 @@ async def upload_document(file: UploadFile = File(...)):
     """Upload a new document"""
     try:
         content = await file.read()
+        if not file.filename:
+            raise HTTPException(status_code=400, detail="Filename is required")
+
         doc_metadata = document_service.upload_document(
             filename=file.filename,
             file_content=content,
             doc_type=file.content_type
         )
         return doc_metadata
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 

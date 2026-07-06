@@ -19,6 +19,8 @@ class DocumentService:
     
     def upload_document(self, filename: str, file_content: bytes, doc_type: str) -> dict:
         """Upload a document and store metadata"""
+        self._validate_pdf(filename, file_content, doc_type)
+
         doc_id = f"doc_{datetime.now().timestamp()}"
         file_path = os.path.join(self.storage_path, f"{doc_id}_{filename}")
         
@@ -69,6 +71,21 @@ class DocumentService:
         metadata = self._read_metadata()
         return next((d for d in metadata if d["document_id"] == doc_id), None)
     
+    def _validate_pdf(self, filename: str, file_content: bytes, doc_type: Optional[str]) -> None:
+        """Ensure requested uploads are valid PDF files."""
+        if not filename:
+            raise ValueError("Filename is required")
+
+        lower_name = filename.lower()
+        if not lower_name.endswith(".pdf"):
+            raise ValueError("Only PDF files are supported")
+
+        if doc_type and doc_type.lower() != "application/pdf":
+            raise ValueError("Content type must be application/pdf")
+
+        if not file_content.startswith(b"%PDF"):
+            raise ValueError("Uploaded file is not a valid PDF")
+
     def _read_metadata(self) -> List[dict]:
         """Read metadata file"""
         try:

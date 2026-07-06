@@ -37,6 +37,16 @@ class DocuMindApiTests(unittest.TestCase):
         self.assertIn("summary", data)
         self.assertIn("message_count", data)
 
+    def test_upload_rejects_non_pdf_files(self):
+        response = self.client.post(
+            "/api/documents/upload",
+            files={"file": ("notes.txt", b"not a pdf", "text/plain")},
+        )
+        self.assertEqual(response.status_code, 400)
+        data = response.json()
+        self.assertFalse(data["success"])
+        self.assertIn("message", data)
+
 
 if __name__ == "__main__":
     unittest.main()
