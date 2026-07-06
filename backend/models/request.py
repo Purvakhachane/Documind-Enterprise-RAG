@@ -17,6 +17,16 @@ class ChatRequest(BaseModel):
             raise ValueError("Question is too long")
         return cleaned
 
+    @validator("conversation_id")
+    def validate_conversation_id(cls, value: Optional[str]) -> Optional[str]:
+        if value is None:
+            return None
+
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("Conversation ID cannot be empty")
+        return cleaned
+
 
 class DocumentUploadRequest(BaseModel):
     document_name: str = Field(..., min_length=1)

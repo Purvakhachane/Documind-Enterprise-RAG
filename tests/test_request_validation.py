@@ -28,6 +28,16 @@ class RequestValidationTests(unittest.TestCase):
         self.assertFalse(data["success"])
         self.assertIn("Validation failed", data["message"])
 
+    def test_blank_conversation_id_returns_validation_error(self):
+        response = self.client.post(
+            "/api/chat",
+            json={"question": "Explain the system briefly.", "conversation_id": "   "},
+        )
+        self.assertEqual(response.status_code, 422)
+        data = response.json()
+        self.assertFalse(data["success"])
+        self.assertIn("Validation failed", data["message"])
+
 
 if __name__ == "__main__":
     unittest.main()
