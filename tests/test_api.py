@@ -2,12 +2,17 @@ import unittest
 from fastapi.testclient import TestClient
 
 from backend.main import app
+from backend.routes.chat import RATE_LIMIT_MAX_REQUESTS, request_log
 from backend.routes.conversations import conversation_service
 
 
 class DocuMindApiTests(unittest.TestCase):
     def setUp(self):
+        request_log.clear()
         self.client = TestClient(app)
+
+    def tearDown(self):
+        request_log.clear()
 
     def test_root_endpoint_returns_html_dashboard(self):
         response = self.client.get("/")
@@ -46,6 +51,24 @@ class DocuMindApiTests(unittest.TestCase):
         data = response.json()
         self.assertFalse(data["success"])
         self.assertIn("message", data)
+
+    def test_chat_endpoint_enforces_rate_limit(self):
+        request_log.clear()
+
+        for _ in range(RATE_LIMIT_MAX_REQUESTS):
+            response = self.client.post(
+                "/api/chat",
+                json={"question": "Explain the system briefly."},
+            )
+            self.assertEqual(response.status_code, 200)
+
+        blocked_response = self.client.post(
+            "/api/chat",
+            json={"question": "Explain the system briefly again."},
+        )
+
+        self.assertEqual(blocked_response.status_code, 429)
+        request_log.clear()
 
 
 if __name__ == "__main__":

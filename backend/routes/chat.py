@@ -30,7 +30,7 @@ router = APIRouter(prefix="/api", tags=["chat"])
 conversation_service = ConversationService()
 request_log = defaultdict(list)
 RATE_LIMIT_WINDOW_SECONDS = 60
-RATE_LIMIT_MAX_REQUESTS = 5
+RATE_LIMIT_MAX_REQUESTS = 20
 
 @router.post(
     "/chat",
@@ -55,9 +55,10 @@ RATE_LIMIT_MAX_REQUESTS = 5
         }
     },
 )
-def chat(request: ChatRequest):
+def chat(request: ChatRequest, http_request: Request):
     """Process a chat request with RAG and persist it in a conversation."""
     try:
+        _check_rate_limit(http_request)
         rag_response = ask_question(request.question)
         metadata = _build_response_metadata(rag_response["answer"], 0.85)
 
@@ -77,6 +78,8 @@ def chat(request: ChatRequest):
             conversation_id=conversation_id,
             timestamp=datetime.now(),
         )
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
