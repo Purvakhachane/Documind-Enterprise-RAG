@@ -32,7 +32,29 @@ request_log = defaultdict(list)
 RATE_LIMIT_WINDOW_SECONDS = 60
 RATE_LIMIT_MAX_REQUESTS = 5
 
-@router.post("/chat")
+@router.post(
+    "/chat",
+    summary="Ask a question to the RAG assistant",
+    description="Send a chat question to the document-aware RAG system and receive an answer along with metadata.",
+    response_description="Structured chat response with answer metadata",
+    responses={
+        200: {
+            "description": "Successful chat response",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "answer": "The system uses document retrieval to answer questions.",
+                        "source": "Sample.pdf",
+                        "page": 1,
+                        "confidence": 0.85,
+                        "conversation_id": "conv_123",
+                        "timestamp": "2026-07-06T20:00:00"
+                    }
+                }
+            }
+        }
+    },
+)
 def chat(request: ChatRequest):
     """Process a chat request with RAG and persist it in a conversation."""
     try:
@@ -59,7 +81,22 @@ def chat(request: ChatRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/chat/stream")
+@router.post(
+    "/chat/stream",
+    summary="Stream a chat answer",
+    description="Return the chat answer as a simple text stream for clients that want incremental output.",
+    response_description="Streaming text response",
+    responses={
+        200: {
+            "description": "Streaming response payload",
+            "content": {
+                "text/plain": {
+                    "example": "The system uses document retrieval to answer questions."
+                }
+            }
+        }
+    },
+)
 def stream_chat(request: ChatRequest, http_request: Request):
     """Return a simple streaming-style response for the chat endpoint."""
     try:
