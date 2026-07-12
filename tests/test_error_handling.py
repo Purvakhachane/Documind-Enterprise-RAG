@@ -15,6 +15,14 @@ class ErrorHandlingTests(unittest.TestCase):
         self.assertFalse(data["success"])
         self.assertIn("message", data)
 
+    def test_http_exception_returns_consistent_error_payload(self):
+        response = self.client.get("/api/conversations/does-not-exist/summary")
+        self.assertEqual(response.status_code, 404)
+        data = response.json()
+        self.assertFalse(data["success"])
+        self.assertIn("message", data)
+        self.assertEqual(data["status_code"], 404)
+
 
 if __name__ == "__main__":
     unittest.main()

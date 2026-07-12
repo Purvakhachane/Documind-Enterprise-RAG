@@ -3,8 +3,11 @@ from typing import List, Optional
 from datetime import datetime
 import json
 
+from backend.config import UPLOAD_STORAGE_PATH
+
+
 class DocumentService:
-    def __init__(self, storage_path: str = "./documents"):
+    def __init__(self, storage_path: str = UPLOAD_STORAGE_PATH):
         self.storage_path = storage_path
         self.metadata_file = os.path.join(storage_path, "metadata.json")
         

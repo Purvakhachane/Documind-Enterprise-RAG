@@ -2,10 +2,12 @@ from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi import HTTPException
 from backend.routes.chat import router as chat_router
 from backend.routes.documents import router as documents_router
 from backend.routes.conversations import router as conversations_router
-from backend.middleware.error_handler import global_exception_handler, validation_exception_handler
+from backend.middleware.error_handler import global_exception_handler, validation_exception_handler, http_exception_handler
+from backend.middleware.request_logging import RequestLoggingMiddleware
 from backend.services.document_service import DocumentService
 from backend.services.conversation_service import ConversationService
 from backend.config import APP_TITLE, APP_DESCRIPTION, APP_VERSION, ENVIRONMENT
@@ -21,12 +23,20 @@ app = FastAPI(
 document_service = DocumentService()
 conversation_service = ConversationService()
 
+app.add_middleware(RequestLoggingMiddleware)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+    ],
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 # Include routers
@@ -37,6 +47,7 @@ app.include_router(conversations_router)
 # Add exception handlers
 app.add_exception_handler(Exception, global_exception_handler)
 app.add_exception_handler(RequestValidationError, validation_exception_handler)
+app.add_exception_handler(HTTPException, http_exception_handler)
 
 @app.get("/", response_class=HTMLResponse)
 def home():

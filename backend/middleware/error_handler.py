@@ -1,4 +1,4 @@
-from fastapi import Request, status
+from fastapi import HTTPException, Request, status
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 import logging
@@ -46,5 +46,18 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
             "message": "Validation failed",
             "detail": _serialize_validation_errors(exc.errors()),
             "status_code": 422,
+        },
+    )
+
+
+async def http_exception_handler(request: Request, exc: HTTPException):
+    """Return a consistent JSON response for route-level HTTP errors."""
+    logger.warning("HTTP error for %s: %s", request.url.path, exc.detail)
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={
+            "success": False,
+            "message": str(exc.detail),
+            "status_code": exc.status_code,
         },
     )

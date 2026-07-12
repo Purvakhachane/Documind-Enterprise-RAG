@@ -23,6 +23,24 @@ class ProfessionalApiTests(unittest.TestCase):
         self.assertIn("message", data)
         self.assertEqual(data["status_code"], 404)
 
+    def test_cors_headers_are_present_for_allowed_origin(self):
+        response = self.client.options(
+            "/api/chat",
+            headers={
+                "Origin": "http://localhost:3000",
+                "Access-Control-Request-Method": "POST",
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("access-control-allow-origin", response.headers)
+        self.assertEqual(response.headers["access-control-allow-origin"], "http://localhost:3000")
+
+    def test_health_endpoint_still_works_with_logging_middleware(self):
+        response = self.client.get("/health")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["status"], "healthy")
+        self.assertIn("X-Process-Time", response.headers)
+
 
 if __name__ == "__main__":
     unittest.main()
