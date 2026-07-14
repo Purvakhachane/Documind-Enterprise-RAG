@@ -7,8 +7,12 @@ Displays document chunks.
 import streamlit as st
 
 
-def show_chunks(chunks):
-    """Display first five chunks."""
+def show_chunks(chunks, use_expanders: bool = True):
+    """Display first five chunks.
+
+    When `use_expanders` is False, this renders chunk metadata without
+    nested `st.expander` controls.
+    """
 
     st.subheader("🧩 Document Chunks")
 
@@ -17,11 +21,35 @@ def show_chunks(chunks):
     )
 
     for chunk in chunks[:5]:
+        if use_expanders:
+            with st.expander(
+                chunk.metadata["chunk_id"]
+            ):
+                st.write(
+                    f"Source : {chunk.metadata['source']}"
+                )
 
-        with st.expander(
-            chunk.metadata["chunk_id"]
-        ):
+                st.write(
+                    f"Page : {chunk.metadata['page']}"
+                )
 
+                st.write(
+                    f"Chunk Number : {chunk.metadata['chunk_number']}"
+                )
+
+                st.write(
+                    f"Characters : {chunk.metadata['characters']}"
+                )
+
+                st.write(
+                    f"Words : {chunk.metadata['words']}"
+                )
+
+                st.write(
+                    chunk.page_content
+                )
+        else:
+            st.markdown(f"**Chunk {chunk.metadata['chunk_id']}**")
             st.write(
                 f"Source : {chunk.metadata['source']}"
             )
