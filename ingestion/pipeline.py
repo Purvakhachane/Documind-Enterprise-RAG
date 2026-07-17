@@ -14,6 +14,7 @@ from document_processor.chunker import create_chunks
 from ui import chunks, metadata, summary
 from vector_db.pinecone_manager import PineconeManager
 from services.document_registry import save_document_info
+from services.citation_database import save_citations
 
 
 class DocumentPipeline:
@@ -44,6 +45,9 @@ class DocumentPipeline:
 
         # Split into chunks
         chunks = create_chunks(documents)
+        
+        # Save citation database
+        save_citations(chunks)
 
         # Ensure Pinecone index exists
         index_status = self.pinecone.create_index()
