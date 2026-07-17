@@ -24,6 +24,12 @@ class Settings:
 
     SEARCH_K = 4
 
+    FETCH_K = 8
+
+    KEYWORD_WEIGHT = 0.4
+
+    SEMANTIC_WEIGHT = 0.6
+
     TEMPERATURE = 0.2
 
 

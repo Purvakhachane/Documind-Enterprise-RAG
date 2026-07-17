@@ -1,6 +1,8 @@
 from langchain.retrievers import BM25Retriever
 from langchain.retrievers import EnsembleRetriever
 
+from rag.config.settings import settings
+
 
 class HybridRetriever:
     """Combine keyword and semantic search."""
@@ -12,21 +14,22 @@ class HybridRetriever:
         keyword_retriever = BM25Retriever.from_documents(
             documents
         )
-        keyword_retriever.k = 4
+        keyword_retriever.k = settings.SEARCH_K
 
         semantic_retriever = self.vector_store.as_retriever(
-            search_kwargs={"k": 4}
+            search_kwargs={
+                "k": settings.SEARCH_K,
+                "fetch_k": settings.FETCH_K,
+            }
         )
 
-        hybrid_retriever = EnsembleRetriever(
+        return EnsembleRetriever(
             retrievers=[
                 keyword_retriever,
                 semantic_retriever,
             ],
             weights=[
-                0.4,
-                0.6,
+                settings.KEYWORD_WEIGHT,
+                settings.SEMANTIC_WEIGHT,
             ],
         )
-
-        return hybrid_retriever
