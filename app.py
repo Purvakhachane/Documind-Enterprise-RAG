@@ -4,6 +4,8 @@ import streamlit as st
 
 from ui.registry import show_registry
 
+from ui.citations import show_citations
+
 from ingestion.pipeline import DocumentPipeline
 
 from ui.sidebar import (
@@ -26,6 +28,7 @@ from ui.downloads import (
 
 # ---------------- PAGE CONFIG ---------------- #
 show_registry()
+show_citations()
 st.set_page_config(
     page_title="Documind Enterprise RAG",
     layout="wide"
