@@ -13,9 +13,10 @@ from document_processor.metadata_extractor import extract_metadata
 from document_processor.chunker import create_chunks
 from ui import chunks, metadata, summary
 from vector_db.pinecone_manager import PineconeManager
-from services.document_registry import save_document_info
+from services.document_registry import register_document
 from services.citation_database import save_citations
-
+from services.logger import log_process
+from services.report_generator import save_report
 
 class DocumentPipeline:
     """Handles the complete document processing workflow."""
@@ -34,6 +35,20 @@ class DocumentPipeline:
             dict
         """
 
+        log_process(f"{uploaded_file.name} uploaded")
+
+        log_process("PDF Loaded")
+
+        log_process("Metadata Extracted")
+
+        log_process("Chunks Created")
+
+        log_process("Citation Database Updated")
+
+        log_process("Pipeline Completed")
+
+        save_report(result)
+
         # Save PDF
         file_path = save_pdf(uploaded_file)
 
@@ -45,9 +60,15 @@ class DocumentPipeline:
 
         # Split into chunks
         chunks = create_chunks(documents)
-        
+
         # Save citation database
         save_citations(chunks)
+
+        register_document(
+            uploaded_file,
+            documents,
+            chunks
+        )
 
         # Ensure Pinecone index exists
         index_status = self.pinecone.create_index()
